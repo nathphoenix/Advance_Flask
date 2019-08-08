@@ -17,6 +17,16 @@ class UserModel(db.Model):    # by passing db.model as an argument to the class 
     self.password = password
     # return super().__init__(*args, **kwargs)()
   
+  def json(self):
+      # return {"name": self.name, "items": self.items}
+      return {"id": self.id, "username": self.username}
+  
+  def delete_from_db(self):
+  
+      db.session.delete(self)
+      db.session.commit()
+
+
   def save_to_db(self):
     db.session.add(self)
     db.session.commit()

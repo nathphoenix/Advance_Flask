@@ -12,13 +12,13 @@ class StoreModel(db.Model):
   items = db.relationship("ItemModel", lazy="dynamic")
   #lazy="dynamic" : do not go into items table and create an object for each items
 
-  def __init__(self, name, price):
+  def __init__(self, name):
     self.name = name
-    self.price = price
+    # self.price = price
 
   def json(self):
     # return {"name": self.name, "items": self.items}
-    return {"name": self.name, "items": [items.json() for item in self.items.all()]} #we include .all() because of lazy=dynamic that will throw error
+    return {"name": self.name, "items": [item.json() for item in self.items.all()]} #we include .all() because of lazy=dynamic that will throw error
 
   @classmethod        #we continue with the class method here because it returns an object of item model as oppose to a dictionary
   def find_by_name(cls, name):
