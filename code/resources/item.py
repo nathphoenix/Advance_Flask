@@ -2,28 +2,36 @@
 from flask import Flask, request
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import (jwt_required, 
- get_jwt_claims,
- jwt_optional,
- get_jwt_identity,
+#  get_jwt_claims,
+#  jwt_optional,
+#  get_jwt_identity,
  fresh_jwt_required)
 from models.item import ItemModel
+BLANK_ERROR = "'{}' Cannot be empty"
+ITEM_ERROR = "Item not found"
+NAME_ERROR = "An item with the name '{}' already exist."
+INSERT_ERROR = "An error occurred in inserting item"
+ITEM_DELETED = "item deleted successfully"
 
 class Item(Resource):
   parser = reqparse.RequestParser()
-  parser.add_argument("price", type=float, required=True, help="Price Cannot be empty")
-  parser.add_argument("store_id", type=int, required=True, help="Every items need a store id")
+  parser.add_argument("price", type=float, required=True, help=BLANK_ERROR.format("price"))
+  parser.add_argument("store_id", type=int, required=True, help=BLANK_ERROR.format("store_id"))
 
 
-  @jwt_required #this is a decorator, we can use this on any of our method that we want to add
+  # @jwt_required #this is a decorator, we can use this on any of our method that we want to add
   #authentication to before the method will run, if user has no token it will not work
-  def get(self, name):
+  #we changing the instance of the class to class method
+  @classmethod
+  #we can use the classmethod when the method you are defining interract with the main class
+  def get(cls, name:str):
     #fetching item from our database
     item = ItemModel.find_by_name(name)
     if item:
       return item.json()      #we can't return item but the json format 
 
     
-    return {"message": "Item not found"}, 404
+    return {"message": ITEM_ERROR}, 404
 
 
     #New method this fetch from static database not the main database
@@ -35,11 +43,11 @@ class Item(Resource):
     #        return item
 
   #we define a new mwthod and then allow other methods to inherit from it instead of repition of codes
-  
+  @classmethod  #note that classmethod goes on top
   @fresh_jwt_required   #u can use it anywhere u want
-  def post(self, name):
+  def post(cls, name:str):
     if ItemModel.find_by_name(name):    #we can use slef ot Item which is class name
-      return {"message": "An item with the name '{}' already exist. ".format(name)}, 400
+      return {"message": NAME_ERROR.format(name)}, 400
     # if next(filter(lambda x: x["name"] == name, items), None):
     #   return {"message": "An item with the name '{}' already exist. ".format(name)}, 400
     # data = request.get_json()
@@ -51,16 +59,22 @@ class Item(Resource):
     try:
       item.save_to_db()
     except:
-      return {"message": "An error occurred in inserting item"}, 500 #internal server error
+      return {"message": INSERT_ERROR}, 500 #internal server error
     
     return item.json(), 201
 
- 
+  @classmethod
   @jwt_required
-  def delete(self, name):
-    claims = get_jwt_claims()
-    if not claims["is_admin"]:
-      return {"message": "Admin priileges is required"}, 401
+  def delete(cls, name:str):
+
+    #commented this out for the advance couse purpose
+    #(
+    # claims = get_jwt_claims()
+    # if not claims["is_admin"]:
+    #   return {"message": "Admin priileges is required"}, 401
+    #)
+    #stopped here
+    
     # with alchemy
     item = ItemModel.find_by_name(name)
     if item:
@@ -76,13 +90,14 @@ class Item(Resource):
     
     # connection.commit()
     # connection.close()
-    return {"message": "item deleted successfully"}
+    return {"message": ITEM_DELETED}
   
   #the orders matter, declare your function before calling them and not after
   
     
   #WE USE THIS TO EDIT AND UPDATE OUR RECORDS
-  def put(self, name):
+  @classmethod
+  def put(cls, name:str):
     
     # data = request.get_json()  #not using this cos of the new variable parser
     data = Item.parser.parse_args()    #we use Item cos parser belongs to the class Item
@@ -110,18 +125,26 @@ class Item(Resource):
 
 #This is for retrieving, many items from database
 class ItemList(Resource):
-  @jwt_optional
-  def get(self):
-    user_id = get_jwt_identity() #we get the identity stored in jwt, if there is no jwt key, it returns nonw
-    items = [items.json() for item in ItemModel.find_all()]
-    if user_id:
-      return{"items: items"}, 200
-    # return {"items": [item.json() for item in ItemModel.query.all()]}
-          #OR
-    return {
-        "items": [item["name"] for item in items],
-        "message": "more data available if you are log in"
-        }, 200
+  @classmethod
+  # @jwt_optional removed this for the advance course
+  def get(cls):
+      #just using this for refactoring the code to a simpler function for now
+    return {"items": [item.json() for item in ItemModel.query.all()]}, 200
+
+
+    #old
+    # user_id = get_jwt_identity() #we get the identity stored in jwt, if there is no jwt key, it returns nonw
+    # items = [items.json() for item in ItemModel.find_all()]
+    # if user_id:
+    #   return{"items: items"}, 200
+    # # return {"items": [item.json() for item in ItemModel.query.all()]}
+    #       #OR
+    # return {
+    #     "items": [item["name"] for item in items],
+    #     "message": "more data available if you are log in"
+    #     }, 200
+
+      
     # connection = sqlite3.connect("data.db")
     # cursor = connection.cursor()
 

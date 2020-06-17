@@ -40,48 +40,48 @@ def check_if_token_in_blacklist(decrypted_token):
     return decrypted_token["jti"] in BLACKLIST #we have to stop checking the identity token but rather check for the jti of the token
     # return decrypted_token["identity"] in BLACKLIST #then we import blacklist
     #this token identity will be true if there and false if not there
-@jwt.user_claims_loader
-def add_claims_to_jwt(identity):
-    if identity == 1:   #if the user id is one or the first id in the user table then it will be an admin
-        return{"is_admin" : True}
-    else:
-        return{"is_admin": False}
+# @jwt.user_claims_loader
+# def add_claims_to_jwt(identity):
+#     if identity == 1:   #if the user id is one or the first id in the user table then it will be an admin
+#         return{"is_admin" : True}
+#     else:
+#         return{"is_admin": False}
 
-@jwt.expired_token_loader
-def expired_token_callback():
-    return jsonify({
-        "description": "The token has expired.",
-        "error": "token_expired"
-    }), 401
+# @jwt.expired_token_loader
+# def expired_token_callback():
+#     return jsonify({
+#         "description": "The token has expired.",
+#         "error": "token_expired"
+#     }), 401
 
 
-@jwt.invalid_token_loader
-def invalid_token_callback(error):
-    return jsonify({
-        "description": "Signature vrification failed.",
-        "error": "Invalid_token"
-    }), 401
+# @jwt.invalid_token_loader
+# def invalid_token_callback(error):
+#     return jsonify({
+#         "description": "Signature vrification failed.",
+#         "error": "Invalid_token"
+#     }), 401
 
-@jwt.unauthorized_loader
-def missing_token_callback(error):
-    return jsonify({
-        "description": "Request does not contain an access token.",
-        "error": "authoriztaion_required"
-    }), 401
+# @jwt.unauthorized_loader
+# def missing_token_callback(error):
+#     return jsonify({
+#         "description": "Request does not contain an access token.",
+#         "error": "authoriztaion_required"
+#     }), 401
 
-@jwt.needs_fresh_token_loader
-def token_not_fresh_callback():
-    return jsonify({
-        "description": "This token is fresh.",
-        "error": "freh_token_required"
-    }), 401
+# @jwt.needs_fresh_token_loader
+# def token_not_fresh_callback():
+#     return jsonify({
+#         "description": "This token is fresh.",
+#         "error": "freh_token_required"
+#     }), 401
 
-@jwt.revoked_token_loader  #this is for logging out user after logging in with valid token
-def revoked_token_loader():
-    return jsonify({
-        "description": "The token has been revoked.",
-        "error": "token_revoked"
-    }), 401
+# @jwt.revoked_token_loader  #this is for logging out user after logging in with valid token
+# def revoked_token_loader():
+#     return jsonify({
+#         "description": "The token has been revoked.",
+#         "error": "token_revoked"
+#     }), 401
 
 
 api.add_resource(Item, "/item/<string:name>")
